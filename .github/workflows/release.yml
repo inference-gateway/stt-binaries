@@ -1,0 +1,61 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: amd64
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: DeterminateSystems/nix-installer-action@v22
+
+      - name: Build static binaries
+        run: |
+          nix build 'nixpkgs#pkgsStatic.whisper-cpp' -o whisper
+          nix build 'nixpkgs#pkgsStatic.ffmpeg-headless' -o ffmpeg
+          install -m755 whisper/bin/whisper-cli "whisper-cli-linux-${{ matrix.arch }}"
+          install -m755 ffmpeg/bin/ffmpeg "ffmpeg-linux-${{ matrix.arch }}"
+
+      - name: Sanity-check binaries
+        run: |
+          for bin in whisper-cli ffmpeg; do
+            file "$bin-linux-${{ matrix.arch }}" | grep -q 'statically linked'
+          done
+          "./ffmpeg-linux-${{ matrix.arch }}" -version
+          "./whisper-cli-linux-${{ matrix.arch }}" --help > /dev/null
+
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: binaries-${{ matrix.arch }}
+          path: |
+            whisper-cli-linux-${{ matrix.arch }}
+            ffmpeg-linux-${{ matrix.arch }}
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v8.0.1
+        with:
+          merge-multiple: true
+          path: dist
+
+      - name: Publish release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd dist
+          sha256sum whisper-cli-linux-* ffmpeg-linux-* > checksums.txt
+          gh release upload stt-v1 --clobber -R "${{ github.repository }}" \
+            whisper-cli-linux-* ffmpeg-linux-* checksums.txt
