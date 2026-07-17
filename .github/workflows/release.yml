@@ -21,8 +21,8 @@ jobs:
 
       - name: Build static binaries
         run: |
-          nix build 'nixpkgs#pkgsStatic.whisper-cpp' -o whisper
-          nix build 'nixpkgs#pkgsStatic.ffmpeg-headless' -o ffmpeg
+          nix build --impure --expr '(builtins.getFlake "nixpkgs").legacyPackages.${builtins.currentSystem}.pkgsStatic.whisper-cpp.override { withSDL = false; withFFmpegSupport = false; }' -o whisper
+          nix build --impure --expr '(builtins.getFlake "nixpkgs").legacyPackages.${builtins.currentSystem}.pkgsStatic.ffmpeg-headless.override { withOpenmpt = false; withV4l2 = false; withVaapi = false; }' -o ffmpeg
           install -m755 whisper/bin/whisper-cli "whisper-cli-linux-${{ matrix.arch }}"
           install -m755 ffmpeg/bin/ffmpeg "ffmpeg-linux-${{ matrix.arch }}"
 
