@@ -4,4 +4,4 @@ Prebuilt static speech-to-text binaries (whisper-cli, ffmpeg) auto-downloaded by
 
 Assets are named `<name>-<os>-<arch>` and verified against `checksums.txt` (sha256).
 
-Assets are reproducible `nix build nixpkgs#pkgsStatic.{whisper-cpp,ffmpeg-headless}` outputs (musl, Linux amd64/arm64), refreshed onto the `stt-v1` release by dispatching the [Release workflow](.github/workflows/release.yml). macOS is served by `$PATH` (`brew install whisper-cpp ffmpeg`) instead of prebuilt assets.
+Assets are reproducible `nix build nixpkgs#pkgsStatic.{whisper-cpp,ffmpeg-headless}` outputs (musl, Linux amd64/arm64). Dispatching the [Release workflow](.github/workflows/release.yml) runs [semantic-release](https://semantic-release.gitbook.io): the next version is computed from Conventional Commits since the last `vX.Y.Z` tag and published as a new immutable release with freshly built binaries (no commits since the last release → no new release). To refresh binaries against current nixpkgs without other changes, land a `fix: refresh binaries` commit and dispatch. macOS is served by `$PATH` (`brew install whisper-cpp ffmpeg`) instead of prebuilt assets.
