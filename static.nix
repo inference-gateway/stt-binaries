@@ -31,6 +31,7 @@ in
     withFreetype = false;
     withHarfbuzz = false;
     withOpenapv = false; # static pkg-config file broken
+    withOpenjpeg = false; # -> libtiff -> libwebp -> giflib, fails on x86_64 musl
     withVulkan = false;
     withSoxr = false; # not found by configure; swresample suffices
     withSsh = false;
